@@ -108,6 +108,9 @@ def generate_text(image_path, return_input=False):
         tags_formatted('assets/lineart_pyeonggang_upperbody.png'),
         "RESPONSE: ",
         read_result('assets/lineart_pyeonggang_upperbody.png'),
+        tags_formatted(image_path), # tags given
+        image_inference(image_path), # image given
+        "RESPONSE: " # now generate
     ]
     response = setup_model().generate_content(
         inputs,
