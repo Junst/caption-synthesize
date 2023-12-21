@@ -24,27 +24,30 @@ def load_secret(api_key=None):
 
 MODEL = None
 
-TAGS_TEMPLATE = r"""
-Analyze the image in a comprehensive and detailed manner.
+# 1 shot < 3 shot (성능체감 매우 됨)
+# 클래스가 여러개면 클래스에 따라서 포함시켜주면 좋음
+
+INSTRUCTION = r"""
+Analyze the image that is INPUT in a comprehensive and detailed manner.
 The response will be used for constructing dataset in academic research. 
 Thus you must include anything that is necessary to explain the image including given tags.
 
-If tags are given, You must use the given tags, and reorder them to explain the image.
+If tags are given, You must use the given tags, and reorder them to explain the image that is INPUT.
 You must not explain the unrecognized subject or features.
 
 You must include the given tags in RESPONSE
 You MUST try to use and reorder the given tags to construct sentences, instead of fully new sentences summary.
 
 Inside RESPONSE, you should only include information about image itself. 
-
+INPUT:
+"""
+TAGS_TEMPLATE = r"""
 TAG:
-copyright: touhou
-character: hijiri_byakuren
-general tags: 1girl bangs black_dress blonde_hair blue_eyes blush breasts bridge brown_hair building closed_mouth cloud cross-laced_clothes day dress gradient_hair hair_between_eyes juliet_sleeves layered_dress long_hair long_sleeves looking_at_viewer medium_breasts mountain multicolored_hair outdoors puffy_sleeves purple_hair skirt_hold sky smile solo standing tree turtleneck very_long_hair wavy_hair white_dress
+Hijiri Byakuren, 1girl, bangs, black dress, blonde hair, blue eyes, blush, breasts, bridge, brown hair, building, closed mouth, cloud, cross-laced clothes, day, dress, gradient hair, hair between eyes, juliet sleeves, layered dress, long hair, long sleeves, looking at viewer, medium breasts, mountain, multicolored hair, outdoors, puffy sleeves, purple hair, skirt hold sky, smile, solo, standing, tree, turtleneck, very long hair, wavy hair, white dress
 
 RESPONSE :
 
-The character depicted is Hijiri Byakuren from the Touhou series, a 1girl solo standing on a bridge during the day. She has long, very_long_hair with gradient_hair transitioning from purple_hair at the top to blonde_hair at the ends. The sky is visible with a clear day, clouds, and a tree. Buildings, mountain, and outdoors show that the setting is a populated area. Byakuren has blue_eyes, blush on her cheeks, and is looking_at_viewer with a smile and closed_mouth. She is wearing a black_dress paired with a layered_dress and a white_dress beneath. The dress features cross-laced_clothes, turtleneck, long_sleeves, juliet_sleeves, and puffy_sleeves. She has medium_breasts, and is engaging in skirt_hold. Bangs and hair_between_eyes frame her face, and her wavy_hair adds texture to her hairstyle. She seems to have halo on her head, and the illustration is drawn with animation style.
+The character depicted is Hijiri Byakuren, a 1girl solo standing on a bridge during the day. She has long, very_long_hair with gradient_hair transitioning from purple_hair at the top to blonde_hair at the ends. The sky is visible with a clear day, clouds, and a tree. Buildings, mountain, and outdoors show that the setting is a populated area. Byakuren has blue_eyes, blush on her cheeks, and is looking_at_viewer with a smile and closed_mouth. She is wearing a black_dress paired with a layered_dress and a white_dress beneath. The dress features cross-laced_clothes, turtleneck, long_sleeves, juliet_sleeves, and puffy_sleeves. She has medium_breasts, and is engaging in skirt_hold. Bangs and hair_between_eyes frame her face, and her wavy_hair adds texture to her hairstyle. She seems to have halo on her head, and the illustration is drawn with animation style.
 """
 
 def setup_model() -> genai.GenerativeModel:
@@ -90,15 +93,21 @@ def generate_text(image_path, return_input=False):
     We assume we have the tags in the same directory as the image. as filename.txt
     """
     inputs = [
-        TAGS_TEMPLATE,
+        INSTRUCTION,
         image_inference(),
-        tags_formatted('assets/04a0102966be49b7a97548994b228065.jpg'),
-        image_inference('assets/04a0102966be49b7a97548994b228065.jpg'),
+        TAGS_TEMPLATE,
+        "INPUT: ",
+        image_inference('assets/04a0102966be49b7a97548994b228065.jpg'), # img 불러오기
+        "TAG: ",
+        tags_formatted('assets/04a0102966be49b7a97548994b228065.jpg'), # txt 불러오기
         "RESPONSE:",
-        read_result('assets/04a0102966be49b7a97548994b228065.jpg'),
-        tags_formatted(image_path),
-        image_inference(image_path),
-        "RESPONSE:",
+        read_result('assets/04a0102966be49b7a97548994b228065.jpg'), # 이미 된거 불러오기 
+        "INPUT: ",
+        image_inference('assets/lineart_pyeonggang_upperbody.png'),
+        "TAG: ",
+        tags_formatted('assets/lineart_pyeonggang_upperbody.png'),
+        "RESPONSE: ",
+        read_result('assets/lineart_pyeonggang_upperbody.png'),
     ]
     response = setup_model().generate_content(
         inputs,
